@@ -22,7 +22,8 @@ until curl -sf "$REGISTRY/v2/" > /dev/null; do sleep 1; done
 
 docker build --build-arg VERSION="$VERSION" -t "$IMAGE" .
 docker push "$IMAGE"
-VERSION="$VERSION" docker stack deploy --detach=false -c stack.yaml "$PREFIX"
+DIGEST=$(docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}')
+VERSION="$VERSION@${DIGEST##*@}" docker stack deploy --resolve-image changed --detach=false -c stack.yaml "$PREFIX"
 
 SECONDS=0
 until curl -sf -m 2 "127.0.0.1:$PORT/notes" > /dev/null; do
